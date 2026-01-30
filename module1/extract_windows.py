@@ -46,29 +46,35 @@ def main():
     video_files = [f for f in os.listdir(VIDEO_FOLDER) if f.endswith((".mp4", ".avi"))]
 
     if not video_files:
-        print("❌ No videos found in input_videos/")
+        print("No videos found in input_videos/")
         return
 
     for video in video_files:
-        print(f"▶ Processing: {video}")
+        print(f"Processing: {video}")
 
         video_path = os.path.join(VIDEO_FOLDER, video)
 
-        # 1. Extract frames
+        # Extract frames
         frames = extract_frames(video_path)
-        print(f"   ✔ Extracted {len(frames)} frames")
+        print(f"Extracted {len(frames)} frames")
 
-        # 2. Create windows
+        # Create windows
         windows = create_windows(frames, WINDOW_SIZE)
-        print(f"   ✔ Created {len(windows)} windows")
+        print(f"Created {len(windows)} windows")
 
-        # 3. Save each window
-        base_name = video.split(".")[0]
+        # Create subfolder for this video
+
+        base_name = os.path.splitext(video)[0]
+        video_output_folder = os.path.join(OUTPUT_FOLDER, base_name)
+        if not os.path.exists(video_output_folder):
+            os.makedirs(video_output_folder)
+
         for i, win in enumerate(windows):
-            out_path = os.path.join(OUTPUT_FOLDER, f"{base_name}_window{i}.npy")
+            out_path = os.path.join(video_output_folder, f"window{i}.npy")
             np.save(out_path, win)
 
-        print("   ✔ Saved windows successfully!\n")
+        print(f"Saved windows for {video} successfully!\n")
+
 
 
 if __name__ == "__main__":

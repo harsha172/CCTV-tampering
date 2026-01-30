@@ -78,38 +78,46 @@ def build_dynamic_graph(patch_features):
 # --------------------------
 # MAIN FUNCTION
 # --------------------------
+
+
+# --------------------------
+# MAIN FUNCTION
+# --------------------------
 def main():
-    # Create output folder
     if not os.path.exists(OUTPUT_FOLDER):
         os.makedirs(OUTPUT_FOLDER)
 
-    # Get all .npy patch-feature files
-    files = sorted([f for f in os.listdir(PATCH_FEATURE_FOLDER) if f.endswith(".npy")])
+    # Loop through each video subfolder in module2/features
+    for video_name in os.listdir(PATCH_FEATURE_FOLDER):
+        video_folder = os.path.join(PATCH_FEATURE_FOLDER, video_name)
+        if not os.path.isdir(video_folder):
+            continue
 
-    if not files:
-        print("❌ No patch feature files found! Run Module 2 first.")
-        return
+        files = sorted([f for f in os.listdir(video_folder) if f.endswith(".npy")])
+        if not files:
+            print(f"No patch feature files found for {video_name}")
+            continue
 
-    print("▶ Loaded patch feature files:", len(files))
+        print(f"▶ Processing video: {video_name}")
 
-    for file in files:
-        print(f"\n📌 Processing: {file}")
+        # Create matching output folder for graphs
+        out_video_folder = os.path.join(OUTPUT_FOLDER, video_name)
+        os.makedirs(out_video_folder, exist_ok=True)
 
-        path = os.path.join(PATCH_FEATURE_FOLDER, file)
-        patch_features = np.load(path, allow_pickle=True)   # shape = (num_windows, 16, 5)
+        for file in files:
+            print(f"Processing: {file}")
+            path = os.path.join(video_folder, file)
+            patch_features = np.load(path, allow_pickle=True)   # shape = (num_windows, 16, 5)
 
-        graphs = build_dynamic_graph(patch_features)
+            graphs = build_dynamic_graph(patch_features)
 
-        # Save adjacency matrices for each window
-        base = file.replace(".npy", "")
+            base = file.replace(".npy", "")
+            for i, G in enumerate(graphs):
+                A = nx.to_numpy_array(G)
+                out_path = os.path.join(out_video_folder, f"{base}_window{i}_adj.npy")
+                np.save(out_path, A)
 
-        for i, G in enumerate(graphs):
-            A = nx.to_numpy_array(G)
-            out_path = os.path.join(OUTPUT_FOLDER, f"{base}_window{i}_adj.npy")
-            np.save(out_path, A)
-
-        print(f"   ✔ Saved {len(graphs)} graphs as adjacency matrices!")
-
+            print(f"Saved {len(graphs)} graphs for {file} into {out_video_folder}")
 
 if __name__ == "__main__":
     main()

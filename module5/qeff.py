@@ -5,7 +5,7 @@ import pennylane as qml
 PATCH_FEATURE_FOLDER = "module2/features"
 QUANTUM_FEATURE_FOLDER = "module5/quantum_features"
 
-NUM_QUBITS = 3
+NUM_QUBITS = 5
 dev = qml.device("default.qubit", wires=NUM_QUBITS)
 
 @qml.qnode(dev)

@@ -40,9 +40,9 @@ def quantum_circuit(feature_vector):
     return [qml.expval(qml.PauliZ(i)) for i in range(NUM_QUBITS)]
 
 
-# ─────────────────────────────────────────────
-# STEP 1 — Extract frames from video
-# ─────────────────────────────────────────────
+# ---------------------------------------------
+# STEP 1 - Extract frames from video
+# ---------------------------------------------
 def extract_frames(video_path):
     cap    = cv2.VideoCapture(video_path)
     frames = []
@@ -68,9 +68,9 @@ def create_windows(frames):
     return windows
 
 
-# ─────────────────────────────────────────────
-# STEP 2 — Extract patch features (Module 2)
-# ─────────────────────────────────────────────
+# ---------------------------------------------
+# STEP 2 - Extract patch features (Module 2)
+# ---------------------------------------------
 def divide_into_patches(frame, grid):
     h, w     = frame.shape[:2]
     patch_h  = h // grid
@@ -110,9 +110,9 @@ def extract_patch_features(window):
     return window_features
 
 
-# ─────────────────────────────────────────────
-# STEP 3 — Quantum features (Module 5)
-# ─────────────────────────────────────────────
+# ---------------------------------------------
+# STEP 3 - Quantum features (Module 5)
+# ---------------------------------------------
 def extract_quantum_features(patch_features):
     # Average over time axis → (P, F)
     pf         = patch_features.mean(axis=0)
@@ -129,9 +129,9 @@ def extract_quantum_features(patch_features):
     return np.array(q_features)
 
 
-# ─────────────────────────────────────────────
-# STEP 4 — TCD score (Module 4)
-# ─────────────────────────────────────────────
+# ---------------------------------------------
+# STEP 4 - TCD score (Module 4)
+# ---------------------------------------------
 def compute_tcd(curr_feats, prev_feats):
     if curr_feats.shape[0] < 2:
         return 0.0
@@ -150,9 +150,9 @@ def compute_tcd(curr_feats, prev_feats):
     return var_dist + LAMBDA * mean_delta
 
 
-# ─────────────────────────────────────────────
-# STEP 5 — Build feature vector (Module 6)
-# ─────────────────────────────────────────────
+# ---------------------------------------------
+# STEP 5 - Build feature vector (Module 6)
+# ---------------------------------------------
 def build_feature_vector(patch_features, quantum_features, tcd_value):
     # patch_features shape: (T, P, F)
     if patch_features.ndim == 2:
@@ -172,9 +172,9 @@ def build_feature_vector(patch_features, quantum_features, tcd_value):
     ])
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # MAIN INFERENCE
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 def run(video_path):
     if not os.path.exists(video_path):
         print(f"ERROR: Video not found at '{video_path}'")
@@ -192,7 +192,7 @@ def run(video_path):
     scaler = joblib.load(scaler_path)
 
     print(f"\nAnalysing video: {video_path}")
-    print("─" * 50)
+    print("=" * 50)
 
     # ── Extract frames and windows ───────────────────────────────────────────
     frames, fps = extract_frames(video_path)
@@ -201,7 +201,7 @@ def run(video_path):
     print(f"Total frames  : {len(frames)}")
     print(f"FPS           : {fps:.1f}")
     print(f"Total windows : {len(windows)}")
-    print(f"Processing... ")
+    print("Processing...")
 
     # ── Process each window ──────────────────────────────────────────────────
     window_results = []
@@ -268,9 +268,9 @@ def run(video_path):
         print(f"\n  Suspicious regions:")
         for w in window_results:
             if w["prediction"] == 1:
-                print(f"    Window {w['window']:>3} │ "
-                      f"{w['start_sec']:>6.2f}s – {w['end_sec']:>6.2f}s │ "
-                      f"Confidence: {w['confidence']}% │ "
+                print(f"    Window {w['window']:>3} | "
+                      f"{w['start_sec']:>6.2f}s - {w['end_sec']:>6.2f}s | "
+                      f"Confidence: {w['confidence']}% | "
                       f"TCD: {w['tcd_score']}")
 
     # ── Save report ──────────────────────────────────────────────────────────
@@ -284,15 +284,18 @@ def run(video_path):
     df["avg_confidence"]   = round(avg_confidence, 2)
     df.to_csv(report_path, index=False)
 
-    print(f"\n✔ Report saved: {report_path}")
+    print(f"\n[OK] Report saved: {report_path}")
     print(f"\nModule 9 complete.")
+
+    # Output verdict for frontend
+    print(overall_verdict.lower())
 
     return overall_verdict, window_results
 
 
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 # ENTRY POINT
-# ─────────────────────────────────────────────
+# ---------------------------------------------
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Usage: python module9/inference.py <path_to_video>")
